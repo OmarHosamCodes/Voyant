@@ -18,7 +18,7 @@
         "noImplicitOverride": true
     },
     "include": [
-        "src/app.ts"
+        "src/**/*"
     ],
     "exclude": [
         "node_modules"

@@ -1,5 +1,5 @@
-import { Website } from "./models/website.js";
 import express from "express";
+import { Website } from "./models/website.js";
 import { analyzeWebsite } from "./helpers.js";
 
 const router = express.Router();
