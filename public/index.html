@@ -114,28 +114,20 @@
                     <h4 class="font-semibold mb-3 text-gray-700">Performance Metrics</h4>
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
                         <div>
-                            <div class="text-sm text-gray-500">Load Time</div>
-                            <div class="load-time">-</div>
+                            <div class="text-sm text-gray-500">First Contentful Paint</div>
+                            <div class="first-contentful-paint">-</div>
                         </div>
                         <div>
-                            <div class="text-sm text-gray-500">First Paint</div>
-                            <div class="first-paint">-</div>
+                            <div class="text-sm text-gray-500">Largest Contentful Paint</div>
+                            <div class="largest-contentful-paint">-</div>
                         </div>
                         <div>
-                            <div class="text-sm text-gray-500">DOM Interactive</div>
-                            <div class="dom-interactive">-</div>
+                            <div class="text-sm text-gray-500">Total Blocking Time</div>
+                            <div class="total-blocking-time">-</div>
                         </div>
                         <div>
-                            <div class="text-sm text-gray-500">Resources</div>
-                            <div class="resource-count">-</div>
-                        </div>
-                        <div>
-                            <div class="text-sm text-gray-500">DOM Nodes</div>
-                            <div class="dom-nodes">-</div>
-                        </div>
-                        <div>
-                            <div class="text-sm text-gray-500">JS Heap Size</div>
-                            <div class="heap-size">-</div>
+                            <div class="text-sm text-gray-500">Cumulative Layout Shift</div>
+                            <div class="cumulative-layout-shift">-</div>
                         </div>
                     </div>
                 </div>
@@ -213,10 +205,10 @@
 
                 // Update metrics
                 if (analysis.metrics) {
-                    updateElement('.load-time', analysis.metrics.firstContentfulPaint / 1000, v => formatMetric(v, 's'));
-                    updateElement('.first-paint', analysis.metrics.largestContentfulPaint / 1000, v => formatMetric(v, 's'));
-                    updateElement('.dom-interactive', analysis.metrics.totalBlockingTime / 1000, v => formatMetric(v, 's'));
-                    updateElement('.dom-nodes', analysis.metrics.cumulativeLayoutShift, formatMetric);
+                    updateElement('.first-contentful-paint', analysis.metrics.firstContentfulPaint / 1000, v => formatMetric(v, 's'));
+                    updateElement('.largest-contentful-paint', analysis.metrics.largestContentfulPaint / 1000, v => formatMetric(v, 's'));
+                    updateElement('.total-blocking-time', analysis.metrics.totalBlockingTime / 1000, v => formatMetric(v, 's'));
+                    updateElement('.cumulative-layout-shift', analysis.metrics.cumulativeLayoutShift, formatMetric);
                 }
 
                 // Update timestamp
