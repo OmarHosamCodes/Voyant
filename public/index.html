@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>Website Analyzer</title>
+    <title>Voyant</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" rel="stylesheet">
     <script>
@@ -50,7 +50,7 @@
             </div>
         </div>
 
-        <!-- Error Alert -->
+        <!-- Alerts -->
         <div id="errorAlert" class="hidden mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded relative">
             <span class="block sm:inline"></span>
             <button class="absolute top-0 bottom-0 right-0 px-4" onclick="this.parentElement.classList.add('hidden')">
@@ -58,7 +58,6 @@
             </button>
         </div>
 
-        <!-- Success Alert -->
         <div id="successAlert"
             class="hidden mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded relative">
             <span class="block sm:inline"></span>
@@ -73,6 +72,7 @@
         <!-- Website Card Template -->
         <template id="websiteTemplate">
             <div class="bg-white rounded-lg shadow-md p-6 animate__animated animate__fadeIn">
+                <!-- Header Section -->
                 <div class="flex flex-col md:flex-row justify-between items-start mb-4 gap-4">
                     <div>
                         <h3 class="text-2xl font-semibold text-gray-800"></h3>
@@ -88,56 +88,103 @@
                             class="analyze-btn px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
                             Analyze Now
                         </button>
+                        <button
+                            class="history-btn px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                            View History
+                        </button>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    <div class="p-4 bg-gray-50 rounded-lg">
-                        <div class="text-sm text-gray-500">Performance</div>
-                        <div class="text-2xl font-semibold performance-score">-</div>
+                <!-- Latest Analysis View -->
+                <div class="latest-analysis">
+
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                        <div class="p-4 bg-gray-50 rounded-lg">
+                            <div class="text-sm text-gray-500">Performance</div>
+                            <div class="text-2xl font-semibold performance-score">-</div>
+                        </div>
+                        <div class="p-4 bg-gray-50 rounded-lg">
+                            <div class="text-sm text-gray-500">SEO</div>
+                            <div class="text-2xl font-semibold seo-score">-</div>
+                        </div>
+                        <div class="p-4 bg-gray-50 rounded-lg">
+                            <div class="text-sm text-gray-500">Accessibility</div>
+                            <div class="text-2xl font-semibold accessibility-score">-</div>
+                        </div>
+                        <div class="p-4 bg-gray-50 rounded-lg">
+                            <div class="text-sm text-gray-500">Best Practices</div>
+                            <div class="text-2xl font-semibold practices-score">-</div>
+                        </div>
                     </div>
-                    <div class="p-4 bg-gray-50 rounded-lg">
-                        <div class="text-sm text-gray-500">SEO</div>
-                        <div class="text-2xl font-semibold seo-score">-</div>
+
+                    <div class="border-t pt-4">
+                        <h4 class="font-semibold mb-3 text-gray-700">Performance Metrics</h4>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            <div>
+                                <div class="text-sm text-gray-500">First Contentful Paint</div>
+                                <div class="first-contentful-paint">-</div>
+                            </div>
+                            <div>
+                                <div class="text-sm text-gray-500">Largest Contentful Paint</div>
+                                <div class="largest-contentful-paint">-</div>
+                            </div>
+                            <div>
+                                <div class="text-sm text-gray-500">Total Blocking Time</div>
+                                <div class="total-blocking-time">-</div>
+                            </div>
+                            <div>
+                                <div class="text-sm text-gray-500">Cumulative Layout Shift</div>
+                                <div class="cumulative-layout-shift">-</div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="p-4 bg-gray-50 rounded-lg">
-                        <div class="text-sm text-gray-500">Accessibility</div>
-                        <div class="text-2xl font-semibold accessibility-score">-</div>
-                    </div>
-                    <div class="p-4 bg-gray-50 rounded-lg">
-                        <div class="text-sm text-gray-500">Best Practices</div>
-                        <div class="text-2xl font-semibold practices-score">-</div>
-                    </div>
+                    <div class="text-sm text-gray-500 mb-4 last-check">Not analyzed yet</div>
                 </div>
 
-                <div class="border-t pt-4">
-                    <h4 class="font-semibold mb-3 text-gray-700">Performance Metrics</h4>
-                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        <div>
-                            <div class="text-sm text-gray-500">First Contentful Paint</div>
-                            <div class="first-contentful-paint">-</div>
-                        </div>
-                        <div>
-                            <div class="text-sm text-gray-500">Largest Contentful Paint</div>
-                            <div class="largest-contentful-paint">-</div>
-                        </div>
-                        <div>
-                            <div class="text-sm text-gray-500">Total Blocking Time</div>
-                            <div class="total-blocking-time">-</div>
-                        </div>
-                        <div>
-                            <div class="text-sm text-gray-500">Cumulative Layout Shift</div>
-                            <div class="cumulative-layout-shift">-</div>
-                        </div>
+                <!-- History View -->
+                <div class="history-view hidden">
+                    <div class="mb-4">
+                        <button class="back-to-latest px-4 py-2 text-blue-600 hover:text-blue-800 focus:outline-none">
+                            ← Back to Latest Analysis
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Date
+                                    </th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Performance
+                                    </th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        SEO
+                                    </th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Accessibility
+                                    </th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Best Practices
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200 history-table-body">
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-
-                <div class="text-sm text-gray-500 mt-4 last-check">Not analyzed yet</div>
             </div>
         </template>
     </div>
 
     <script>
+        // Utility Functions
         function showLoading() {
             document.getElementById('loadingState').classList.remove('hidden');
         }
@@ -174,52 +221,79 @@
             return `<span class="${color}">${value}%</span>`;
         }
 
-        function updateWebsiteCard(name, analysis) {
-            // First verify we have both required parameters
-            if (!name || !analysis) {
-                console.error('Missing required parameters for updateWebsiteCard');
+        // Website Card Functions
+        function toggleHistoryView(card, show) {
+            const latestView = card.querySelector('.latest-analysis');
+            const historyView = card.querySelector('.history-view');
+
+            if (show) {
+                latestView.classList.add('hidden');
+                historyView.classList.remove('hidden');
+            } else {
+                latestView.classList.remove('hidden');
+                historyView.classList.add('hidden');
+            }
+        }
+
+        function updateHistoryView(card, analyses) {
+            const tbody = card.querySelector('.history-table-body');
+            tbody.innerHTML = '';
+
+            if (!analyses || !analyses.length) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+                        No analysis history available
+                    </td>
+                `;
+                tbody.appendChild(row);
                 return;
             }
 
-            // Find the card and verify it exists
-            const card = document.querySelector(`[data-name="${name}"]`);
-            if (!card) {
-                console.error(`Could not find card for website: ${name}`);
-                return;
+            analyses
+                .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+                .forEach(analysis => {
+                    const row = document.createElement('tr');
+                    row.classList.add('hover:bg-gray-50');
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            ${new Date(analysis.timestamp).toLocaleString()}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">${formatScore(analysis.performance)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${formatScore(analysis.seo)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${formatScore(analysis.accessibility)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${formatScore(analysis.bestPractices)}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+        }
+
+        function updateLatestAnalysis(card, analysis) {
+            if (!analysis) return;
+
+            const updateElement = (selector, value, formatter) => {
+                const element = card.querySelector(selector);
+                if (element) {
+                    element.innerHTML = formatter ? formatter(value) : value;
+                }
+            };
+
+            // Update main scores
+            updateElement('.performance-score', analysis.performance, formatScore);
+            updateElement('.seo-score', analysis.seo, formatScore);
+            updateElement('.accessibility-score', analysis.accessibility, formatScore);
+            updateElement('.practices-score', analysis.bestPractices, formatScore);
+
+            // Update metrics
+            if (analysis.metrics) {
+                updateElement('.first-contentful-paint', analysis.metrics.firstContentfulPaint / 1000, v => formatMetric(v, 's'));
+                updateElement('.largest-contentful-paint', analysis.metrics.largestContentfulPaint / 1000, v => formatMetric(v, 's'));
+                updateElement('.total-blocking-time', analysis.metrics.totalBlockingTime, v => formatMetric(v, 'ms'));
+                updateElement('.cumulative-layout-shift', analysis.metrics.cumulativeLayoutShift, formatMetric);
             }
 
-            try {
-                // Update scores with error handling
-                const updateElement = (selector, value, formatter) => {
-                    const element = card.querySelector(selector);
-                    if (element) {
-                        element.innerHTML = formatter(value);
-                    }
-                };
-
-                // Update main scores
-                updateElement('.performance-score', analysis.performance, formatScore);
-                updateElement('.seo-score', analysis.seo, formatScore);
-                updateElement('.accessibility-score', analysis.accessibility, formatScore);
-                updateElement('.practices-score', analysis.bestPractices, formatScore);
-
-                // Update metrics
-                if (analysis.metrics) {
-                    updateElement('.first-contentful-paint', analysis.metrics.firstContentfulPaint / 1000, v => formatMetric(v, 's'));
-                    updateElement('.largest-contentful-paint', analysis.metrics.largestContentfulPaint / 1000, v => formatMetric(v, 's'));
-                    updateElement('.total-blocking-time', analysis.metrics.totalBlockingTime / 1000, v => formatMetric(v, 's'));
-                    updateElement('.cumulative-layout-shift', analysis.metrics.cumulativeLayoutShift, formatMetric);
-                }
-
-                // Update timestamp
-                const lastCheck = card.querySelector('.last-check');
-                if (lastCheck) {
-                    lastCheck.textContent = `Last checked: ${new Date().toLocaleString()}`;
-                }
-            } catch (error) {
-                console.error('Error updating website card:', error);
-                showError('Failed to update website information');
-            }
+            // Update timestamp
+            updateElement('.last-check', `Last checked: ${new Date(analysis.timestamp).toLocaleString()}`);
         }
 
         function createWebsiteCard(name, website) {
@@ -230,88 +304,93 @@
 
             try {
                 const template = document.getElementById('websiteTemplate');
-                if (!template) {
-                    console.error('Website template not found');
-                    return null;
-                }
+                if (!template) throw new Error('Website template not found');
 
                 const card = template.content.cloneNode(true);
                 const container = card.querySelector('div');
-                if (!container) {
-                    console.error('Container element not found in template');
-                    return null;
-                }
+                if (!container) throw new Error('Container element not found in template');
 
                 container.dataset.name = name;
 
-                const titleElement = container.querySelector('h3');
-                const urlElement = container.querySelector('.url');
-                const analyzeButton = container.querySelector('.analyze-btn');
+                // Set basic information
+                container.querySelector('h3').textContent = name;
+                container.querySelector('.url').textContent = website.url;
 
-                if (titleElement) titleElement.textContent = name;
-                if (urlElement) urlElement.textContent = website.url;
-                if (analyzeButton) {
-                    analyzeButton.addEventListener('click', () => {
-                        analyzeWebsite(name);
-                    });
-                }
+                // Add event listeners
+                container.querySelector('.analyze-btn').addEventListener('click', () => analyzeWebsite(name));
+                container.querySelector('.history-btn').addEventListener('click', () => toggleHistoryView(container, true));
+                container.querySelector('.back-to-latest').addEventListener('click', () => toggleHistoryView(container, false));
 
-                // Fill in the latest analysis if available
+                // Initialize with existing data if available
                 if (website.analyses && website.analyses.length > 0) {
                     const latestAnalysis = website.analyses[website.analyses.length - 1];
-                    if (latestAnalysis) {
-                        // We need to delay this update until after the card is in the DOM
-                        setTimeout(() => updateWebsiteCard(name, latestAnalysis), 0);
-                    }
+                    updateLatestAnalysis(container, latestAnalysis);
+                    updateHistoryView(container, website.analyses);
                 }
 
                 return container;
             } catch (error) {
                 console.error('Error creating website card:', error);
+                showError('Failed to create website card');
                 return null;
             }
         }
 
         async function analyzeWebsite(name) {
             const websiteCard = document.querySelector(`[data-name="${name}"]`);
+            if (!websiteCard) {
+                showError('Website card not found');
+                return;
+            }
+
             const analyzeBtn = websiteCard.querySelector('.analyze-btn');
             const spinner = websiteCard.querySelector('.analysis-spinner');
 
+            // Update UI to loading state
             analyzeBtn.disabled = true;
             analyzeBtn.classList.add('bg-gray-400');
             analyzeBtn.textContent = 'Analyzing...';
             spinner.classList.remove('hidden');
 
             try {
+                // Perform the analysis
                 const response = await fetch(`/api/websites/${name}/analyze`, {
-                    method: 'POST'
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
                 });
 
-                if (!response.ok) throw new Error('Analysis failed');
+                if (!response.ok) {
+                    throw new Error(`Analysis failed: ${response.statusText}`);
+                }
 
                 const analysis = await response.json();
 
-                // Map API response payload to your UI update function
-                const mappedAnalysis = {
-                    performance: analysis.performance,
-                    accessibility: analysis.accessibility,
-                    bestPractices: analysis.bestPractices,
-                    seo: analysis.seo,
-                    metrics: {
-                        firstContentfulPaint: analysis.metrics.firstContentfulPaint,
-                        largestContentfulPaint: analysis.metrics.largestContentfulPaint,
-                        totalBlockingTime: analysis.metrics.totalBlockingTime,
-                        cumulativeLayoutShift: analysis.metrics.cumulativeLayoutShift
-                    }
-                };
+                // Add timestamp to the analysis
+                analysis.timestamp = new Date().toISOString();
 
-                updateWebsiteCard(name, mappedAnalysis);
+                // Fetch all analyses to update history
+                const historicalResponse = await fetch(`/api/websites/${name}`);
+                if (!historicalResponse.ok) {
+                    throw new Error('Failed to fetch analysis history');
+                }
+
+                const websiteData = await historicalResponse.json();
+                const analyses = websiteData.analyses || [];
+                analyses.push(analysis);
+
+                // Update both views with the new data
+                updateLatestAnalysis(websiteCard, analysis);
+                updateHistoryView(websiteCard, analyses);
                 showSuccess('Analysis completed successfully');
+
             } catch (error) {
-                console.error('Error:', error);
-                showError('Analysis failed. Please try again.');
+                console.error('Error during analysis:', error);
+                showError(error.message || 'Analysis failed. Please try again.');
                 websiteCard.querySelector('.performance-score').innerHTML = '<span class="text-red-600">Error</span>';
             } finally {
+                // Reset UI state
                 analyzeBtn.disabled = false;
                 analyzeBtn.classList.remove('bg-gray-400');
                 analyzeBtn.textContent = 'Analyze Now';
@@ -321,7 +400,9 @@
 
         async function loadWebsites() {
             try {
+                showLoading();
                 const response = await fetch('/api/websites');
+
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -333,23 +414,37 @@
                     throw new Error('Websites list container not found');
                 }
 
+                // Clear existing websites
                 websitesList.innerHTML = '';
 
+                // Add website cards
                 for (const [name, website] of Object.entries(websites)) {
                     const card = createWebsiteCard(name, website);
                     if (card) {
                         websitesList.appendChild(card);
                     }
                 }
+
+                if (Object.keys(websites).length === 0) {
+                    websitesList.innerHTML = `
+                        <div class="text-center py-8 text-gray-500">
+                            No websites added yet. Add your first website using the form above.
+                        </div>
+                    `;
+                }
+
             } catch (error) {
                 console.error('Error loading websites:', error);
                 showError('Failed to load websites. Please refresh the page.');
+            } finally {
+                hideLoading();
             }
         }
 
-        // Add website form handler
+        // Form submission handler
         document.getElementById('addWebsiteForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+
             const nameInput = document.getElementById('name');
             const urlInput = document.getElementById('url');
 
@@ -358,8 +453,14 @@
                 return;
             }
 
-            const name = nameInput.value;
-            const url = urlInput.value;
+            const name = nameInput.value.trim();
+            const url = urlInput.value.trim();
+
+            // Basic validation
+            if (!name || !url) {
+                showError('Please fill in all fields');
+                return;
+            }
 
             showLoading();
 
@@ -371,22 +472,26 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error('Failed to add website');
+                    throw new Error(response.statusText || 'Failed to add website');
                 }
 
+                // Clear form
                 nameInput.value = '';
                 urlInput.value = '';
+
+                // Reload websites list
                 await loadWebsites();
                 showSuccess('Website added successfully');
+
             } catch (error) {
-                console.error('Error:', error);
-                showError('Failed to add website. Please try again.');
+                console.error('Error adding website:', error);
+                showError(error.message || 'Failed to add website. Please try again.');
             } finally {
                 hideLoading();
             }
         });
 
-        // Initial load
+        // Initialize the application
         window.addEventListener('DOMContentLoaded', () => {
             loadWebsites();
         });
