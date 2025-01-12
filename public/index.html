@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Website Analyzer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    animation: {
+                        'spin-slow': 'spin 3s linear infinite',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-4xl font-bold mb-8 text-gray-800">Website Analyzer</h1>
+
+        <!-- Add Website Form -->
+        <form id="addWebsiteForm" class="mb-8 bg-white rounded-lg shadow-md p-6">
+            <div class="flex flex-col md:flex-row gap-4 items-end">
+                <div class="flex-1">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Website Name</label>
+                    <input type="text" id="name" required
+                        class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="flex-1">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Website URL</label>
+                    <input type="url" id="url" required
+                        class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <button type="submit"
+                    class="w-full md:w-auto px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
+                    Add Website
+                </button>
+            </div>
+        </form>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="hidden">
+            <div class="flex items-center justify-center p-8">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                <span class="ml-4 text-lg text-gray-600">Analyzing website...</span>
+            </div>
+        </div>
+
+        <!-- Error Alert -->
+        <div id="errorAlert" class="hidden mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded relative">
+            <span class="block sm:inline"></span>
+            <button class="absolute top-0 bottom-0 right-0 px-4" onclick="this.parentElement.classList.add('hidden')">
+                <span class="text-2xl">&times;</span>
+            </button>
+        </div>
+
+        <!-- Success Alert -->
+        <div id="successAlert"
+            class="hidden mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded relative">
+            <span class="block sm:inline"></span>
+            <button class="absolute top-0 bottom-0 right-0 px-4" onclick="this.parentElement.classList.add('hidden')">
+                <span class="text-2xl">&times;</span>
+            </button>
+        </div>
+
+        <!-- Websites List -->
+        <div id="websitesList" class="grid gap-6"></div>
+
+        <!-- Website Card Template -->
+        <template id="websiteTemplate">
+            <div class="bg-white rounded-lg shadow-md p-6 animate__animated animate__fadeIn">
+                <div class="flex flex-col md:flex-row justify-between items-start mb-4 gap-4">
+                    <div>
+                        <h3 class="text-2xl font-semibold text-gray-800"></h3>
+                        <p class="text-gray-500 url"></p>
+                    </div>
+                    <div class="flex gap-2">
+                        <div class="analysis-spinner hidden">
+                            <div
+                                class="animate-spin h-5 w-5 border-2 border-blue-600 rounded-full border-t-transparent">
+                            </div>
+                        </div>
+                        <button
+                            class="analyze-btn px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
+                            Analyze Now
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <div class="text-sm text-gray-500">Performance</div>
+                        <div class="text-2xl font-semibold performance-score">-</div>
+                    </div>
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <div class="text-sm text-gray-500">SEO</div>
+                        <div class="text-2xl font-semibold seo-score">-</div>
+                    </div>
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <div class="text-sm text-gray-500">Accessibility</div>
+                        <div class="text-2xl font-semibold accessibility-score">-</div>
+                    </div>
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <div class="text-sm text-gray-500">Best Practices</div>
+                        <div class="text-2xl font-semibold practices-score">-</div>
+                    </div>
+                </div>
+
+                <div class="border-t pt-4">
+                    <h4 class="font-semibold mb-3 text-gray-700">Performance Metrics</h4>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <div>
+                            <div class="text-sm text-gray-500">Load Time</div>
+                            <div class="load-time">-</div>
+                        </div>
+                        <div>
+                            <div class="text-sm text-gray-500">First Paint</div>
+                            <div class="first-paint">-</div>
+                        </div>
+                        <div>
+                            <div class="text-sm text-gray-500">DOM Interactive</div>
+                            <div class="dom-interactive">-</div>
+                        </div>
+                        <div>
+                            <div class="text-sm text-gray-500">Resources</div>
+                            <div class="resource-count">-</div>
+                        </div>
+                        <div>
+                            <div class="text-sm text-gray-500">DOM Nodes</div>
+                            <div class="dom-nodes">-</div>
+                        </div>
+                        <div>
+                            <div class="text-sm text-gray-500">JS Heap Size</div>
+                            <div class="heap-size">-</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-sm text-gray-500 mt-4 last-check">Not analyzed yet</div>
+            </div>
+        </template>
+    </div>
+
+    <script>
+        function showLoading() {
+            document.getElementById('loadingState').classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingState').classList.add('hidden');
+        }
+
+        function showError(message) {
+            const alert = document.getElementById('errorAlert');
+            alert.querySelector('span').textContent = message;
+            alert.classList.remove('hidden');
+            setTimeout(() => alert.classList.add('hidden'), 5000);
+        }
+
+        function showSuccess(message) {
+            const alert = document.getElementById('successAlert');
+            alert.querySelector('span').textContent = message;
+            alert.classList.remove('hidden');
+            setTimeout(() => alert.classList.add('hidden'), 5000);
+        }
+
+        function formatMetric(value, unit = '') {
+            if (typeof value !== 'number') return '-';
+            return `${Math.round(value).toLocaleString()}${unit}`;
+        }
+
+        function formatScore(score) {
+            if (typeof score !== 'number') return '-';
+            const value = Math.round(score);
+            let color = 'text-red-600';
+            if (value >= 90) color = 'text-green-600';
+            else if (value >= 50) color = 'text-yellow-600';
+            return `<span class="${color}">${value}%</span>`;
+        }
+
+        function updateWebsiteCard(name, analysis) {
+            // First verify we have both required parameters
+            if (!name || !analysis) {
+                console.error('Missing required parameters for updateWebsiteCard');
+                return;
+            }
+
+            // Find the card and verify it exists
+            const card = document.querySelector(`[data-name="${name}"]`);
+            if (!card) {
+                console.error(`Could not find card for website: ${name}`);
+                return;
+            }
+
+            try {
+                // Update scores with error handling
+                const updateElement = (selector, value, formatter) => {
+                    const element = card.querySelector(selector);
+                    if (element) {
+                        element.innerHTML = formatter(value);
+                    }
+                };
+
+                // Update main scores
+                updateElement('.performance-score', analysis.performance, formatScore);
+                updateElement('.seo-score', analysis.seo, formatScore);
+                updateElement('.accessibility-score', analysis.accessibility, formatScore);
+                updateElement('.practices-score', analysis.bestPractices, formatScore);
+
+                // Update metrics
+                if (analysis.metrics) {
+                    updateElement('.load-time', analysis.metrics.firstContentfulPaint / 1000, v => formatMetric(v, 's'));
+                    updateElement('.first-paint', analysis.metrics.largestContentfulPaint / 1000, v => formatMetric(v, 's'));
+                    updateElement('.dom-interactive', analysis.metrics.totalBlockingTime / 1000, v => formatMetric(v, 's'));
+                    updateElement('.dom-nodes', analysis.metrics.cumulativeLayoutShift, formatMetric);
+                }
+
+                // Update timestamp
+                const lastCheck = card.querySelector('.last-check');
+                if (lastCheck) {
+                    lastCheck.textContent = `Last checked: ${new Date().toLocaleString()}`;
+                }
+            } catch (error) {
+                console.error('Error updating website card:', error);
+                showError('Failed to update website information');
+            }
+        }
+
+        function createWebsiteCard(name, website) {
+            if (!name || !website) {
+                console.error('Missing required parameters for createWebsiteCard');
+                return null;
+            }
+
+            try {
+                const template = document.getElementById('websiteTemplate');
+                if (!template) {
+                    console.error('Website template not found');
+                    return null;
+                }
+
+                const card = template.content.cloneNode(true);
+                const container = card.querySelector('div');
+                if (!container) {
+                    console.error('Container element not found in template');
+                    return null;
+                }
+
+                container.dataset.name = name;
+
+                const titleElement = container.querySelector('h3');
+                const urlElement = container.querySelector('.url');
+                const analyzeButton = container.querySelector('.analyze-btn');
+
+                if (titleElement) titleElement.textContent = name;
+                if (urlElement) urlElement.textContent = website.url;
+                if (analyzeButton) {
+                    analyzeButton.addEventListener('click', () => {
+                        analyzeWebsite(name);
+                    });
+                }
+
+                // Fill in the latest analysis if available
+                if (website.analyses && website.analyses.length > 0) {
+                    const latestAnalysis = website.analyses[website.analyses.length - 1];
+                    if (latestAnalysis) {
+                        // We need to delay this update until after the card is in the DOM
+                        setTimeout(() => updateWebsiteCard(name, latestAnalysis), 0);
+                    }
+                }
+
+                return container;
+            } catch (error) {
+                console.error('Error creating website card:', error);
+                return null;
+            }
+        }
+
+        async function analyzeWebsite(name) {
+            const websiteCard = document.querySelector(`[data-name="${name}"]`);
+            const analyzeBtn = websiteCard.querySelector('.analyze-btn');
+            const spinner = websiteCard.querySelector('.analysis-spinner');
+
+            analyzeBtn.disabled = true;
+            analyzeBtn.classList.add('bg-gray-400');
+            analyzeBtn.textContent = 'Analyzing...';
+            spinner.classList.remove('hidden');
+
+            try {
+                const response = await fetch(`/api/websites/${name}/analyze`, {
+                    method: 'POST'
+                });
+
+                if (!response.ok) throw new Error('Analysis failed');
+
+                const analysis = await response.json();
+
+                // Map API response payload to your UI update function
+                const mappedAnalysis = {
+                    performance: analysis.performance,
+                    accessibility: analysis.accessibility,
+                    bestPractices: analysis.bestPractices,
+                    seo: analysis.seo,
+                    metrics: {
+                        firstContentfulPaint: analysis.metrics.firstContentfulPaint,
+                        largestContentfulPaint: analysis.metrics.largestContentfulPaint,
+                        totalBlockingTime: analysis.metrics.totalBlockingTime,
+                        cumulativeLayoutShift: analysis.metrics.cumulativeLayoutShift
+                    }
+                };
+
+                updateWebsiteCard(name, mappedAnalysis);
+                showSuccess('Analysis completed successfully');
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Analysis failed. Please try again.');
+                websiteCard.querySelector('.performance-score').innerHTML = '<span class="text-red-600">Error</span>';
+            } finally {
+                analyzeBtn.disabled = false;
+                analyzeBtn.classList.remove('bg-gray-400');
+                analyzeBtn.textContent = 'Analyze Now';
+                spinner.classList.add('hidden');
+            }
+        }
+
+        async function loadWebsites() {
+            try {
+                const response = await fetch('/api/websites');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const websites = await response.json();
+                const websitesList = document.getElementById('websitesList');
+
+                if (!websitesList) {
+                    throw new Error('Websites list container not found');
+                }
+
+                websitesList.innerHTML = '';
+
+                for (const [name, website] of Object.entries(websites)) {
+                    const card = createWebsiteCard(name, website);
+                    if (card) {
+                        websitesList.appendChild(card);
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading websites:', error);
+                showError('Failed to load websites. Please refresh the page.');
+            }
+        }
+
+        // Add website form handler
+        document.getElementById('addWebsiteForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nameInput = document.getElementById('name');
+            const urlInput = document.getElementById('url');
+
+            if (!nameInput || !urlInput) {
+                showError('Form inputs not found');
+                return;
+            }
+
+            const name = nameInput.value;
+            const url = urlInput.value;
+
+            showLoading();
+
+            try {
+                const response = await fetch('/api/websites', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, url })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to add website');
+                }
+
+                nameInput.value = '';
+                urlInput.value = '';
+                await loadWebsites();
+                showSuccess('Website added successfully');
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Failed to add website. Please try again.');
+            } finally {
+                hideLoading();
+            }
+        });
+
+        // Initial load
+        window.addEventListener('DOMContentLoaded', () => {
+            loadWebsites();
+        });
+    </script>
+</body>
+
+</html>
