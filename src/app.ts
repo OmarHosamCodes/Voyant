@@ -1,21 +1,30 @@
 import express from "express";
 import { connect } from "./services/db.js";
 import { runAnalysis } from "./helpers.js";
-import dotenv from "dotenv";
 import routes from "./routes.js";
+import { config } from "dotenv";
 
-dotenv.config();
-
+config();
 const app = express();
 app.use(express.json());
 app.use(express.static("public"));
 app.use("/api", routes);
 
-const RETRY_INTERVAL = process.env.RETRY_INTERVAL || "60000";
-setInterval(runAnalysis, Number.parseInt(RETRY_INTERVAL));
+const RETRY_INTERVAL = Number(process.env.RETRY_INTERVAL) || 60000;
+setInterval(runAnalysis, RETRY_INTERVAL);
 
-const port = process.env.PORT || 3000;
-app.listen(port, () => {
-	connect();
-	console.log(`Server running on port ${port}`);
-});
+const port = Number(process.env.PORT) || 3000;
+
+const startServer = async () => {
+	try {
+		await connect();
+		app.listen(port, () => {
+			console.log(`Server running on port ${port}`);
+		});
+	} catch (error) {
+		console.error("Failed to connect to the database:", error);
+		process.exit(1);
+	}
+};
+
+startServer();

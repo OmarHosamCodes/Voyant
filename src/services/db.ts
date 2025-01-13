@@ -1,16 +1,13 @@
+import { config } from "dotenv";
 import mongoose from "mongoose";
-import dotenv from "dotenv";
 
-dotenv.config();
+config();
 
 const mongoUri = `mongodb+srv://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST}/${process.env.MONGO_DATABASE}${process.env.MONGO_OPTIONS}`;
 
 if (!mongoUri) {
 	throw new Error("MONGODB_URI is not set");
 }
-
-// Configure mongoose connection options
-mongoose.set("strictQuery", true);
 
 export async function connect() {
 	try {
@@ -20,7 +17,6 @@ export async function connect() {
 				strict: true,
 			},
 		});
-		console.log("Connected successfully to server");
 	} catch (error) {
 		console.error("Error connecting to MongoDB:", error);
 		await disconnect();

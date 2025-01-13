@@ -1,6 +1,6 @@
-import mongoose from "mongoose";
+import db from "../services/db.js";
 
-const analysisSchema = new mongoose.Schema({
+const analysisSchema = new db.Schema({
 	timestamp: { type: Date, default: Date.now },
 	performance: Number,
 	accessibility: Number,
@@ -12,12 +12,13 @@ const analysisSchema = new mongoose.Schema({
 		totalBlockingTime: Number,
 		cumulativeLayoutShift: Number,
 	},
+	status: String,
 });
 
-const websiteSchema = new mongoose.Schema({
+const websiteSchema = new db.Schema({
 	name: { type: String, required: true, unique: true },
 	url: { type: String, required: true },
 	analyses: [analysisSchema],
 });
 
-export const Website = mongoose.model("Website", websiteSchema);
+export const Website = db.model("Website", websiteSchema);

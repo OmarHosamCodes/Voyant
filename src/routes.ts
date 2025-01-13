@@ -1,7 +1,9 @@
 import express from "express";
 import { Website } from "./models/website.js";
 import { analyzeWebsite } from "./helpers.js";
+import { config } from "dotenv";
 
+config();
 const router = express.Router();
 
 router.post("/websites", async (req, res) => {
@@ -45,6 +47,20 @@ router.get("/websites", async (_req, res) => {
 		);
 
 		res.json(formattedWebsites);
+	} catch (error) {
+		res.status(500).json({ error: "Server error" });
+	}
+});
+
+router.get("/websites/:name", async (req, res) => {
+	try {
+		const website = await Website.findOne({ name: req.params.name }).lean();
+		if (!website) {
+			res.status(404).json({ error: "Website not found" });
+			return;
+		}
+
+		res.json(website);
 	} catch (error) {
 		res.status(500).json({ error: "Server error" });
 	}

@@ -1,6 +1,9 @@
 import lighthouse from "lighthouse";
 import * as ChromeLauncher from "chrome-launcher";
 import { Website } from "./models/website.js";
+import { config } from "dotenv";
+
+config();
 
 export async function runLighthouseAnalysis(url: string) {
 	const chrome = await ChromeLauncher.launch({ chromeFlags: ["--headless"] });
