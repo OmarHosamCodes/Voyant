@@ -182,320 +182,259 @@
             </div>
         </template>
     </div>
+    
+<script>
+    // Track ongoing requests
+    const analyzingWebsites = new Set();
+    let loadWebsitesController = null;
 
-    <script>
-        // Utility Functions
-        function showLoading() {
-            document.getElementById('loadingState').classList.remove('hidden');
-        }
+    // Utility Functions
+    function showLoading() {
+        document.getElementById('loadingState').classList.remove('hidden');
+    }
 
-        function hideLoading() {
-            document.getElementById('loadingState').classList.add('hidden');
-        }
+    function hideLoading() {
+        document.getElementById('loadingState').classList.add('hidden');
+    }
 
-        function showError(message) {
-            const alert = document.getElementById('errorAlert');
-            alert.querySelector('span').textContent = message;
-            alert.classList.remove('hidden');
-            setTimeout(() => alert.classList.add('hidden'), 5000);
-        }
+    function showError(message) {
+        const alert = document.getElementById('errorAlert');
+        alert.querySelector('span').textContent = message;
+        alert.classList.remove('hidden');
+        setTimeout(() => alert.classList.add('hidden'), 5000);
+    }
 
-        function showSuccess(message) {
-            const alert = document.getElementById('successAlert');
-            alert.querySelector('span').textContent = message;
-            alert.classList.remove('hidden');
-            setTimeout(() => alert.classList.add('hidden'), 5000);
-        }
+    function showSuccess(message) {
+        const alert = document.getElementById('successAlert');
+        alert.querySelector('span').textContent = message;
+        alert.classList.remove('hidden');
+        setTimeout(() => alert.classList.add('hidden'), 5000);
+    }
 
-        function formatMetric(value, unit = '') {
-            if (typeof value !== 'number') return '-';
-            return `${Math.round(value).toLocaleString()}${unit}`;
-        }
+    function formatMetric(value, unit = '') {
+        if (typeof value !== 'number') return '-';
+        return `${Math.round(value).toLocaleString()}${unit}`;
+    }
 
-        function formatScore(score) {
-            if (typeof score !== 'number') return '-';
-            const value = Math.round(score);
-            let color = 'text-red-600';
-            if (value >= 90) color = 'text-green-600';
-            else if (value >= 50) color = 'text-yellow-600';
-            return `<span class="${color}">${value}%</span>`;
-        }
+    function formatScore(score) {
+        if (typeof score !== 'number') return '-';
+        const value = Math.round(score);
+        let color = 'text-red-600';
+        if (value >= 90) color = 'text-green-600';
+        else if (value >= 50) color = 'text-yellow-600';
+        return `<span class="${color}">${value}%</span>`;
+    }
 
-        // Website Card Functions
-        function toggleHistoryView(card, show) {
-            const latestView = card.querySelector('.latest-analysis');
-            const historyView = card.querySelector('.history-view');
+    // Website Card Functions
+    function toggleHistoryView(card, show) {
+        const latestView = card.querySelector('.latest-analysis');
+        const historyView = card.querySelector('.history-view');
+        latestView.classList.toggle('hidden', show);
+        historyView.classList.toggle('hidden', !show);
+    }
 
-            if (show) {
-                latestView.classList.add('hidden');
-                historyView.classList.remove('hidden');
-            } else {
-                latestView.classList.remove('hidden');
-                historyView.classList.add('hidden');
-            }
-        }
-
-        function updateHistoryView(card, analyses) {
-            const tbody = card.querySelector('.history-table-body');
-            tbody.innerHTML = '';
-
-            if (!analyses || !analyses.length) {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td colspan="5" class="px-6 py-4 text-center text-gray-500">
-                        No analysis history available
-                    </td>
-                `;
-                tbody.appendChild(row);
-                return;
-            }
-
-            analyses
-                .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-                .forEach(analysis => {
-                    const row = document.createElement('tr');
-                    row.classList.add('hover:bg-gray-50');
-                    row.innerHTML = `
+    async function updateHistoryView(card, analyses) {
+        const tbody = card.querySelector('.history-table-body');
+        tbody.innerHTML = analyses?.length ? 
+            analyses.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+                .map(analysis => `
+                    <tr class="hover:bg-gray-50">
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             ${new Date(analysis.timestamp).toLocaleString()}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">${formatScore(analysis.performance)}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">${formatScore(analysis.seo)}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">${formatScore(analysis.accessibility)}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">${formatScore(analysis.bestPractices)}</td>
-                    `;
-                    tbody.appendChild(row);
-                });
+                        ${['performance', 'seo', 'accessibility', 'bestPractices']
+                            .map(k => `<td class="px-6 py-4 whitespace-nowrap">${formatScore(analysis[k])}</td>`)
+                            .join('')}
+                    </tr>
+                `).join('') : 
+            `<tr><td colspan="5" class="px-6 py-4 text-center text-gray-500">No history available</td></tr>`;
+    }
+
+    function updateLatestAnalysis(card, analysis) {
+        if (!analysis) return;
+        
+        const fields = {
+            '.performance-score': analysis.performance,
+            '.seo-score': analysis.seo,
+            '.accessibility-score': analysis.accessibility,
+            '.practices-score': analysis.bestPractices,
+            '.first-contentful-paint': analysis.metrics?.firstContentfulPaint / 1000,
+            '.largest-contentful-paint': analysis.metrics?.largestContentfulPaint / 1000,
+            '.total-blocking-time': analysis.metrics?.totalBlockingTime,
+            '.cumulative-layout-shift': analysis.metrics?.cumulativeLayoutShift,
+            '.last-check': `Last checked: ${new Date(analysis.timestamp).toLocaleString()}`
+        };
+
+        Object.entries(fields).forEach(([selector, value]) => {
+            const element = card.querySelector(selector);
+            if (!element) return;
+            
+            if (selector.includes('-score')) {
+                element.innerHTML = formatScore(value);
+            } else if (selector.includes('contentful') || selector.includes('shift')) {
+                element.textContent = formatMetric(value, selector.includes('Paint') ? 's' : '');
+            } else {
+                element.textContent = value || '-';
+            }
+        });
+    }
+
+    function createWebsiteCard(name, website) {
+        const template = document.getElementById('websiteTemplate');
+        const card = template.content.cloneNode(true).querySelector('div');
+        card.dataset.name = name;
+
+        card.querySelector('h3').textContent = name;
+        card.querySelector('.url').textContent = website.url;
+
+        // Event handlers with proper cleanup considerations
+        const analyzeHandler = () => analyzeWebsite(name);
+        const historyHandler = () => toggleHistoryView(card, true);
+        const backHandler = () => toggleHistoryView(card, false);
+
+        card.querySelector('.analyze-btn').addEventListener('click', analyzeHandler);
+        card.querySelector('.history-btn').addEventListener('click', historyHandler);
+        card.querySelector('.back-to-latest').addEventListener('click', backHandler);
+
+        // Store references for potential cleanup
+        card._eventHandlers = { analyzeHandler, historyHandler, backHandler };
+
+        if (website.analyses?.length) {
+            updateLatestAnalysis(card, website.analyses.at(-1));
+            updateHistoryView(card, website.analyses);
         }
 
-        function updateLatestAnalysis(card, analysis) {
-            if (!analysis) return;
+        return card;
+    }
 
-            const updateElement = (selector, value, formatter) => {
-                const element = card.querySelector(selector);
-                if (element) {
-                    element.innerHTML = formatter ? formatter(value) : value;
-                }
-            };
+    async function analyzeWebsite(name) {
+        if (analyzingWebsites.has(name)) return;
+        analyzingWebsites.add(name);
 
-            // Update main scores
-            updateElement('.performance-score', analysis.performance, formatScore);
-            updateElement('.seo-score', analysis.seo, formatScore);
-            updateElement('.accessibility-score', analysis.accessibility, formatScore);
-            updateElement('.practices-score', analysis.bestPractices, formatScore);
-
-            // Update metrics
-            if (analysis.metrics) {
-                updateElement('.first-contentful-paint', analysis.metrics.firstContentfulPaint / 1000, v => formatMetric(v, 's'));
-                updateElement('.largest-contentful-paint', analysis.metrics.largestContentfulPaint / 1000, v => formatMetric(v, 's'));
-                updateElement('.total-blocking-time', analysis.metrics.totalBlockingTime, v => formatMetric(v, 'ms'));
-                updateElement('.cumulative-layout-shift', analysis.metrics.cumulativeLayoutShift, formatMetric);
-            }
-
-            // Update timestamp
-            updateElement('.last-check', `Last checked: ${new Date(analysis.timestamp).toLocaleString()}`);
+        const card = document.querySelector(`[data-name="${name}"]`);
+        if (!card) {
+            analyzingWebsites.delete(name);
+            return showError('Website not found');
         }
 
-        function createWebsiteCard(name, website) {
-            if (!name || !website) {
-                console.error('Missing required parameters for createWebsiteCard');
-                return null;
-            }
-
-            try {
-                const template = document.getElementById('websiteTemplate');
-                if (!template) throw new Error('Website template not found');
-
-                const card = template.content.cloneNode(true);
-                const container = card.querySelector('div');
-                if (!container) throw new Error('Container element not found in template');
-
-                container.dataset.name = name;
-
-                // Set basic information
-                container.querySelector('h3').textContent = name;
-                container.querySelector('.url').textContent = website.url;
-
-                // Add event listeners
-                container.querySelector('.analyze-btn').addEventListener('click', () => analyzeWebsite(name));
-                container.querySelector('.history-btn').addEventListener('click', () => toggleHistoryView(container, true));
-                container.querySelector('.back-to-latest').addEventListener('click', () => toggleHistoryView(container, false));
-
-                // Initialize with existing data if available
-                if (website.analyses && website.analyses.length > 0) {
-                    const latestAnalysis = website.analyses[website.analyses.length - 1];
-                    updateLatestAnalysis(container, latestAnalysis);
-                    updateHistoryView(container, website.analyses);
-                }
-
-                return container;
-            } catch (error) {
-                console.error('Error creating website card:', error);
-                showError('Failed to create website card');
-                return null;
-            }
-        }
-
-        async function analyzeWebsite(name) {
-            const websiteCard = document.querySelector(`[data-name="${name}"]`);
-            if (!websiteCard) {
-                showError('Website card not found');
-                return;
-            }
-
-            const analyzeBtn = websiteCard.querySelector('.analyze-btn');
-            const spinner = websiteCard.querySelector('.analysis-spinner');
-
-            // Update UI to loading state
-            analyzeBtn.disabled = true;
-            analyzeBtn.classList.add('bg-gray-400');
-            analyzeBtn.textContent = 'Analyzing...';
+        const btn = card.querySelector('.analyze-btn');
+        const spinner = card.querySelector('.analysis-spinner');
+        
+        try {
+            btn.disabled = true;
+            btn.textContent = 'Analyzing...';
             spinner.classList.remove('hidden');
 
-            try {
-                // Perform the analysis
-                const response = await fetch(`/api/websites/${name}/analyze`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
+            const [analysisRes, historyRes] = await Promise.all([
+                fetch(`/api/websites/${name}/analyze`, { method: 'POST' }),
+                fetch(`/api/websites/${name}`)
+            ]);
 
-                if (!response.ok) {
-                    throw new Error(`Analysis failed: ${response.statusText}`);
-                }
-
-                const analysis = await response.json();
-
-                // Add timestamp to the analysis
-                analysis.timestamp = new Date().toISOString();
-
-                // Fetch all analyses to update history
-                const historicalResponse = await fetch(`/api/websites/${name}`);
-                if (!historicalResponse.ok) {
-                    throw new Error('Failed to fetch analysis history');
-                }
-
-                const websiteData = await historicalResponse.json();
-                const analyses = websiteData.analyses || [];
-                analyses.push(analysis);
-
-                // Update both views with the new data
-                updateLatestAnalysis(websiteCard, analysis);
-                updateHistoryView(websiteCard, analyses);
-                showSuccess('Analysis completed successfully');
-
-            } catch (error) {
-                console.error('Error during analysis:', error);
-                showError(error.message || 'Analysis failed. Please try again.');
-                websiteCard.querySelector('.performance-score').innerHTML = '<span class="text-red-600">Error</span>';
-            } finally {
-                // Reset UI state
-                analyzeBtn.disabled = false;
-                analyzeBtn.classList.remove('bg-gray-400');
-                analyzeBtn.textContent = 'Analyze Now';
-                spinner.classList.add('hidden');
+            if (!analysisRes.ok || !historyRes.ok) {
+                throw new Error('Analysis failed');
             }
+
+            const analysis = await analysisRes.json();
+            analysis.timestamp = new Date().toISOString();
+            
+            const websiteData = await historyRes.json();
+            const analyses = [...(websiteData.analyses || []), analysis];
+
+            updateLatestAnalysis(card, analysis);
+            updateHistoryView(card, analyses);
+            showSuccess('Analysis completed');
+
+        } catch (error) {
+            console.error('Analysis error:', error);
+            showError(error.message || 'Analysis failed');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Analyze Now';
+            spinner.classList.add('hidden');
+            analyzingWebsites.delete(name);
         }
+    }
 
-        async function loadWebsites() {
-            try {
-                showLoading();
-                const response = await fetch('/api/websites');
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const websites = await response.json();
-                const websitesList = document.getElementById('websitesList');
-
-                if (!websitesList) {
-                    throw new Error('Websites list container not found');
-                }
-
-                // Clear existing websites
-                websitesList.innerHTML = '';
-
-                // Add website cards
-                for (const [name, website] of Object.entries(websites)) {
-                    const card = createWebsiteCard(name, website);
-                    if (card) {
-                        websitesList.appendChild(card);
-                    }
-                }
-
-                if (Object.keys(websites).length === 0) {
-                    websitesList.innerHTML = `
-                        <div class="text-center py-8 text-gray-500">
-                            No websites added yet. Add your first website using the form above.
-                        </div>
-                    `;
-                }
-
-            } catch (error) {
-                console.error('Error loading websites:', error);
-                showError('Failed to load websites. Please refresh the page.');
-            } finally {
-                hideLoading();
+    async function loadWebsites() {
+        try {
+            if (loadWebsitesController) {
+                loadWebsitesController.abort();
             }
-        }
+            loadWebsitesController = new AbortController();
 
-        // Form submission handler
-        document.getElementById('addWebsiteForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
+            showLoading();
+            const res = await fetch('/api/websites', {
+                signal: loadWebsitesController.signal
+            });
 
-            const nameInput = document.getElementById('name');
-            const urlInput = document.getElementById('url');
+            if (!res.ok) throw new Error('Failed to load websites');
+            const websites = await res.json();
 
-            if (!nameInput || !urlInput) {
-                showError('Form inputs not found');
+            const container = document.getElementById('websitesList');
+            container.innerHTML = '';
+            
+            if (Object.keys(websites).length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        No websites added yet. Add your first website using the form above.
+                    </div>`;
                 return;
             }
 
-            const name = nameInput.value.trim();
-            const url = urlInput.value.trim();
+            Object.entries(websites).forEach(([name, data]) => {
+                container.appendChild(createWebsiteCard(name, data));
+            });
 
-            // Basic validation
+        } catch (error) {
+            if (error.name !== 'AbortError') {
+                console.error('Load error:', error);
+                showError('Failed to load websites');
+            }
+        } finally {
+            loadWebsitesController = null;
+            hideLoading();
+        }
+    }
+
+    // Form Handler
+    document.getElementById('addWebsiteForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const btn = form.querySelector('button[type="submit"]');
+        btn.disabled = true;
+
+        const name = document.getElementById('name').value.trim();
+        const url = document.getElementById('url').value.trim();
+
+        try {
             if (!name || !url) {
-                showError('Please fill in all fields');
-                return;
+                throw new Error('Please fill in all fields');
             }
 
             showLoading();
+            const res = await fetch('/api/websites', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, url })
+            });
 
-            try {
-                const response = await fetch('/api/websites', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, url })
-                });
+            if (!res.ok) throw new Error('Failed to add website');
+            
+            form.reset();
+            await loadWebsites();
+            showSuccess('Website added successfully');
 
-                if (!response.ok) {
-                    throw new Error(response.statusText || 'Failed to add website');
-                }
+        } catch (error) {
+            showError(error.message);
+        } finally {
+            btn.disabled = false;
+            hideLoading();
+        }
+    });
 
-                // Clear form
-                nameInput.value = '';
-                urlInput.value = '';
-
-                // Reload websites list
-                await loadWebsites();
-                showSuccess('Website added successfully');
-
-            } catch (error) {
-                console.error('Error adding website:', error);
-                showError(error.message || 'Failed to add website. Please try again.');
-            } finally {
-                hideLoading();
-            }
-        });
-
-        // Initialize the application
-        window.addEventListener('DOMContentLoaded', () => {
-            loadWebsites();
-        });
-    </script>
-</body>
+    // Initial Load
+    window.addEventListener('DOMContentLoaded', loadWebsites);
+</script>
+    </body>
 
 </html>
