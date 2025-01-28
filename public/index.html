@@ -78,7 +78,7 @@
                         <h3 class="text-2xl font-semibold text-gray-800"></h3>
                         <p class="text-gray-500 url"></p>
                     </div>
-                    <div class="flex flex-row items-center gap-2">
+                    <div class="flex flex-row gap-2">
                         <div class="analysis-spinner hidden">
                             <div
                                 class="animate-spin h-5 w-5 border-2 border-blue-600 rounded-full border-t-transparent">
@@ -258,10 +258,10 @@
             '.seo-score': analysis.seo,
             '.accessibility-score': analysis.accessibility,
             '.practices-score': analysis.bestPractices,
-            '.first-contentful-paint': (analysis.metrics?.firstContentfulPaint / 1000).toFixed(2),
-            '.largest-contentful-paint': (analysis.metrics?.largestContentfulPaint / 1000).toFixed(2),
-            '.total-blocking-time': (analysis.metrics?.totalBlockingTime).toFixed(2),
-            '.cumulative-layout-shift': (analysis.metrics?.cumulativeLayoutShift).toFixed(2),
+            '.first-contentful-paint': analysis.metrics?.firstContentfulPaint / 1000,
+            '.largest-contentful-paint': analysis.metrics?.largestContentfulPaint / 1000,
+            '.total-blocking-time': analysis.metrics?.totalBlockingTime,
+            '.cumulative-layout-shift': analysis.metrics?.cumulativeLayoutShift,
             '.last-check': `Last checked: ${new Date(analysis.timestamp).toLocaleString()}`
         };
 
