@@ -258,10 +258,10 @@
             '.seo-score': analysis.seo,
             '.accessibility-score': analysis.accessibility,
             '.practices-score': analysis.bestPractices,
-            '.first-contentful-paint': analysis.metrics?.firstContentfulPaint / 1000,
-            '.largest-contentful-paint': analysis.metrics?.largestContentfulPaint / 1000,
-            '.total-blocking-time': analysis.metrics?.totalBlockingTime,
-            '.cumulative-layout-shift': analysis.metrics?.cumulativeLayoutShift,
+            '.first-contentful-paint': (analysis.metrics?.firstContentfulPaint / 1000).toFixed(2),
+            '.largest-contentful-paint': (analysis.metrics?.largestContentfulPaint / 1000).toFixed(2),
+            '.total-blocking-time': (analysis.metrics?.totalBlockingTime).toFixed(2),
+            '.cumulative-layout-shift': (analysis.metrics?.cumulativeLayoutShift).toFixed(2),
             '.last-check': `Last checked: ${new Date(analysis.timestamp).toLocaleString()}`
         };
 
