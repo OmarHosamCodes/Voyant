@@ -15,14 +15,6 @@ COPY .env ./
 COPY bun.lock ./
 RUN bun install
 
-# ENV MONGO_USERNAME=support
-# ENV MONGO_PASSWORD=Inboundlegendx-y12
-# ENV MONGO_HOST=voyantdb.h7odd.mongodb.net
-# ENV MONGO_OPTIONS=?retryWrites=true&w=majority&appName=VoyantDB
-# ENV MONGO_DATABASE=VoyantDB
-# ENV PORT=3000
-# ENV RETRY_INTERVAL=86400000
-
 # Bundle app source
 COPY . .
 

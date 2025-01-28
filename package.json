@@ -1,32 +1,36 @@
 {
-	"name": "website-analyzer",
-	"version": "1.0.0",
-	"type": "module",
-	"scripts": {
-		"start": "tsc && node ./dist/app.js",
-		"dev": "nodemon",
-		"build": "tsc"
-	},
-	"nodemonConfig": {
-		"watch": ["src"],
-		"exec": "tsc && node ./dist/app.js",
-		"ext": "ts,js,json"
-	},
-	"engines": {
-		"bun": "1.x"
-	},
-	"dependencies": {
-		"chrome-launcher": "^1.1.2",
-		"dotenv": "^16.4.7",
-		"express": "^4.21.2",
-		"lighthouse": "^12.3.0",
-		"mongoose": "^8.0.0"
-	},
-	"devDependencies": {
-		"@types/bun": "latest",
-		"@types/express": "^5.0.0",
-		"@types/nodemon": "^1.19.6",
-		"nodemon": "^3.1.9",
-		"typescript": "^5.7.2"
-	}
+  "name": "website-analyzer",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "bun run src/app.ts",
+    "dev": "nodemon",
+    "build": "tsc"
+  },
+  "nodemonConfig": {
+    "watch": ["src"],
+    "exec": "bun run src/app.ts",
+    "ext": "ts,js,json"
+  },
+  "engines": {
+    "bun": "1.x"
+  },
+  "dependencies": {
+    "chrome-launcher": "^1.1.2",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "lighthouse": "^12.3.0",
+    "mongoose": "^8.0.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.9.4",
+    "@types/bun": "latest",
+    "@types/express": "^5.0.0",
+    "@types/nodemon": "^1.19.6",
+    "nodemon": "^3.1.9",
+    "typescript": "^5.7.2"
+  },
+  "trustedDependencies": [
+    "@biomejs/biome"
+  ]
 }
