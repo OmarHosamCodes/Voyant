@@ -1,39 +1,28 @@
-import { config } from "dotenv";
-import mongoose from "mongoose";
+import { Database } from "bun:sqlite";
+import { createTablesIfNotExist } from "src/models/website";
 
-config();
-
-const mongoUri = `mongodb+srv://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST}/${process.env.MONGO_DATABASE}${process.env.MONGO_OPTIONS}`;
-
-if (!mongoUri) {
-	throw new Error("MONGODB_URI is not set");
-}
+// Initialize the SQLite database
+export const db = new Database("voyant.sqlite", { create: true });
 
 export async function connect() {
 	try {
-		await mongoose.connect(mongoUri, {
-			serverApi: {
-				version: "1",
-				strict: true,
-			},
-		});
+		// Create your tables here
+		createTablesIfNotExist();
+		console.info("Connected to SQLite database");
 	} catch (error) {
-		console.error("Error connecting to MongoDB:", error);
+		console.error("Error connecting to SQLite:", error);
 		await disconnect();
-	} finally {
-		console.info("Connected to MongoDB");
 	}
 }
 
 export async function disconnect() {
 	try {
-		await mongoose.disconnect();
+		db.close();
+		console.info("Disconnected from SQLite database");
 	} catch (error) {
-		console.error("Error disconnecting from MongoDB:", error);
-	} finally {
-		console.info("Disconnected from MongoDB");
+		console.error("Error disconnecting from SQLite:", error);
 	}
 }
 
-// Export the mongoose instance if needed
-export default mongoose;
+// Export the database instance
+export default db;

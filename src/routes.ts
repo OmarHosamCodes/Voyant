@@ -1,93 +1,173 @@
-import express from "express";
-import { Website } from "./models/website.js";
-import { analyzeWebsite } from "./helpers.js";
-import { config } from "dotenv";
+import { SQLiteError } from "bun:sqlite";
+import { Router } from "express";
+import { analyzeWebsite } from "./helpers";
+import type { Analysis, MiddlewareSupport, Website } from "./models/types";
+import db from "./services/db";
 
-config();
-const router = express.Router();
+const router = Router();
 
-router.post("/websites", async (req, res) => {
-	const { url, name } = req.body;
-	try {
-		if (!url || !name) {
-			res.status(400).json({ error: "URL and name are required" });
-		}
+interface WebsiteWithAnalyses extends Website {
+	analyses: Analysis[];
+}
 
-		const website = new Website({ name, url });
-		const analysis = await analyzeWebsite(url);
-		website.analyses.push(analysis);
-		await website.save();
+router.post(
+	"/websites",
+	async (req: MiddlewareSupport["req"], res: MiddlewareSupport["res"]) => {
+		const { url, name } = req.body;
 
-		res.json({
-			message: "Website added and analyzed successfully",
-			analysis,
-		});
-	} catch (error) {
-		if ((error as { code?: number }).code === 11000) {
-			res.status(400).json({ error: "Website name already exists" });
-		} else {
+		try {
+			if (!url || !name) {
+				res.status(400).json({ error: "URL and name are required" });
+			}
+
+			const stmt = db.prepare(`
+		INSERT INTO websites (name, url)
+		VALUES (?, ?)
+		`);
+
+			const result = stmt.run(name, url);
+			const websiteId = result.lastInsertRowid;
+
+			await analyzeWebsite(Number(websiteId), url);
+
+			const websiteStmt = db.prepare("SELECT * FROM websites WHERE id = ?");
+			const website = websiteStmt.get(websiteId) as Website;
+
+			res.json({
+				message: "Website added and analyzed successfully",
+				website,
+			});
+		} catch (error) {
+			// Handle SQLite unique constraint error
+			if (
+				error instanceof SQLiteError &&
+				error.code === "SQLITE_CONSTRAINT_UNIQUE"
+			) {
+				res.status(400).json({ error: "Website name already exists" });
+			}
 			res.status(500).json({ error: "Server error" });
 		}
-	}
-});
+	},
+);
 
-router.get("/websites", async (_req, res) => {
-	try {
-		const websites = await Website.find().lean();
-		const formattedWebsites = websites.reduce(
-			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-			(acc: { [key: string]: any }, website) => {
+router.get(
+	"/websites",
+	async (_req: MiddlewareSupport["req"], res: MiddlewareSupport["res"]) => {
+		try {
+			const stmt = db.prepare(`
+      SELECT 
+        w.*,
+        json_group_array(
+          json_object(
+            'id', a.id,
+            'timestamp', a.timestamp,
+            'performance', a.performance,
+            'accessibility', a.accessibility,
+            'best_practices', a.best_practices,
+            'seo', a.seo,
+            'first_contentful_paint', a.first_contentful_paint,
+            'largest_contentful_paint', a.largest_contentful_paint,
+            'total_blocking_time', a.total_blocking_time,
+            'cumulative_layout_shift', a.cumulative_layout_shift,
+            'status', a.status
+          )
+        ) as analyses
+      FROM websites w
+      LEFT JOIN analyses a ON w.id = a.website_id
+      GROUP BY w.id
+    `);
+
+			const websites = stmt.all() as (Website & { analyses: string })[];
+
+			const formattedWebsites = websites.reduce<
+				Record<string, Omit<WebsiteWithAnalyses, "id">>
+			>((acc, website) => {
 				acc[website.name] = {
+					name: website.name,
 					url: website.url,
-					analyses: website.analyses,
+					analyses: JSON.parse(website.analyses),
 				};
 				return acc;
-			},
-			{},
-		);
+			}, {});
 
-		res.json(formattedWebsites);
-	} catch (error) {
-		res.status(500).json({ error: "Server error" });
-	}
-});
-
-router.get("/websites/:name", async (req, res) => {
-	try {
-		const website = await Website.findOne({ name: req.params.name }).lean();
-		if (!website) {
-			res.status(404).json({ error: "Website not found" });
-			return;
+			res.json(formattedWebsites);
+		} catch (error) {
+			res.status(500).json({ error: "Server error" });
 		}
+	},
+);
 
-		res.json(website);
-	} catch (error) {
-		res.status(500).json({ error: "Server error" });
-	}
-});
+router.get(
+	"/websites/:name",
+	async (req: MiddlewareSupport["req"], res: MiddlewareSupport["res"]) => {
+		try {
+			const stmt = db.prepare(`
+      SELECT 
+        w.*,
+        json_group_array(
+          json_object(
+            'id', a.id,
+            'timestamp', a.timestamp,
+            'performance', a.performance,
+            'accessibility', a.accessibility,
+            'best_practices', a.best_practices,
+            'seo', a.seo,
+            'first_contentful_paint', a.first_contentful_paint,
+            'largest_contentful_paint', a.largest_contentful_paint,
+            'total_blocking_time', a.total_blocking_time,
+            'cumulative_layout_shift', a.cumulative_layout_shift,
+            'status', a.status
+          )
+        ) as analyses
+      FROM websites w
+      LEFT JOIN analyses a ON w.id = a.website_id
+      WHERE w.name = ?
+      GROUP BY w.id
+    `);
 
-router.post("/websites/:name/analyze", async (req, res) => {
-	try {
-		const website = await Website.findOne({ name: req.params.name });
-		if (!website) {
-			res.status(404).json({ error: "Website not found" });
-			return;
+			const website = stmt.get(req.params.name) as
+				| (Website & { analyses: string })
+				| undefined;
+
+			if (!website || !website.analyses) {
+				res.status(404).json({ error: "Website not found" });
+				return;
+			}
+
+			const formattedWebsite: WebsiteWithAnalyses = {
+				...(website as Website),
+				analyses: JSON.parse(website.analyses),
+			};
+
+			res.json(formattedWebsite);
+		} catch (error) {
+			res.status(500).json({ error: "Server error" });
 		}
+	},
+);
 
-		const analysis = await analyzeWebsite(website.url);
-		website.analyses.push(analysis);
+router.post(
+	"/websites/:name/analyze",
+	async (req: MiddlewareSupport["req"], res: MiddlewareSupport["res"]) => {
+		try {
+			const stmt = db.prepare("SELECT * FROM websites WHERE name = ?");
+			const website = stmt.get(req.params.name) as Website | undefined;
 
-		if (website?.analyses.length > 30) {
-			const analysesToKeep = website.analyses.slice(-30);
-			website.analyses.splice(0, website.analyses.length);
-			website.analyses.push(...analysesToKeep);
+			if (!website || !website.url) {
+				res.status(404).json({ error: "Website not found" });
+				return;
+			}
+
+			const result = await analyzeWebsite(website.id, website.url);
+
+			const analysisStmt = db.prepare("SELECT * FROM analyses WHERE id = ?");
+			const analysis = analysisStmt.get(result.lastInsertRowid) as Analysis;
+
+			res.json(analysis);
+		} catch (error) {
+			res.status(500).json({ error: "Server error" });
 		}
-
-		await website.save();
-		res.json(analysis);
-	} catch (error) {
-		res.status(500).json({ error: "Server error" });
-	}
-});
+	},
+);
 
 export default router;
